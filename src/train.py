@@ -5,9 +5,9 @@ from sklearn.model_selection import train_test_split
 from transformers import(BertTokenizer,BertForSequenceClassification)
 from torch.utils.data import DataLoader
 
-from dataset import ToxicDataset
-from preprocessing import preprocess_dataframe
-from config import *
+from src.dataset import ToxicDataset
+from src.preprocessing import preprocess_dataframe
+from configuration.config import *
 
 
 device=(
