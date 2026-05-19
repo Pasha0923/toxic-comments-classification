@@ -23,6 +23,8 @@ df=pd.read_csv(
 
 df=preprocess_dataframe(df)
 
+# 🔥 ВОТ СЮДА ВРЕМЕННО ДОБАВЛЯЕШЬ
+df = df.sample(10000, random_state=42)
 
 X_train,X_valid,y_train,y_valid=(
     train_test_split(
@@ -35,12 +37,8 @@ X_train,X_valid,y_train,y_valid=(
 
 
 tokenizer=(
-    BertTokenizer.from_pretrained(
-        MODEL_NAME
-    )
+    BertTokenizer.from_pretrained(MODEL_NAME)
 )
-
-
 train_dataset=ToxicDataset(
     texts=X_train.values,
     labels=y_train,
@@ -48,14 +46,12 @@ train_dataset=ToxicDataset(
     max_length=MAX_LENGTH
 )
 
-
 valid_dataset=ToxicDataset(
     texts=X_valid.values,
     labels=y_valid,
     tokenizer=tokenizer,
     max_length=MAX_LENGTH
 )
-
 
 train_loader=DataLoader(
     train_dataset,
@@ -69,7 +65,6 @@ valid_loader=DataLoader(
     batch_size=BATCH_SIZE
 )
 
-
 model=(
     BertForSequenceClassification
     .from_pretrained(
@@ -81,38 +76,23 @@ model=(
 
 model=model.to(device)
 
-
 optimizer=torch.optim.AdamW(
     model.parameters(),
     lr=LEARNING_RATE
 )
 
-
-
 for epoch in range(EPOCHS):
 
     model.train()
-
     total_loss=0
-
 
     for batch in train_loader:
 
-        input_ids=(
-            batch["input_ids"]
-            .to(device)
-        )
+        input_ids=(batch["input_ids"].to(device))
 
-        attention_mask=(
-            batch["attention_mask"]
-            .to(device)
-        )
+        attention_mask=(batch["attention_mask"].to(device))
 
-        labels=(
-            batch["labels"]
-            .to(device)
-        )
-
+        labels=(batch["labels"].to(device))
 
         outputs=model(
             input_ids=input_ids,
@@ -120,11 +100,9 @@ for epoch in range(EPOCHS):
             labels=labels
         )
 
-
         loss=outputs.loss
 
         total_loss+=loss.item()
-
 
         optimizer.zero_grad()
 
@@ -132,17 +110,8 @@ for epoch in range(EPOCHS):
 
         optimizer.step()
 
-
-    print(
-        f"Epoch:{epoch+1}"
-    )
-
-    print(
-        f"Loss:{total_loss}"
-    )
+    print(f"Epoch:{epoch+1}")
+    print(f"Loss:{total_loss}")
 
 
-torch.save(
-    model.state_dict(),
-    "models/bert_model.pt"
-)
+torch.save(model.state_dict(),"models/bert_model.pt")

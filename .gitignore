@@ -11,6 +11,8 @@ models/
 
 .env
 
+data/
+
 # IDE
 .vscode/
 .idea/

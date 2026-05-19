@@ -1,5 +1,4 @@
 import torch
-
 from torch.utils.data import Dataset
 
 
@@ -28,15 +27,11 @@ class ToxicDataset(Dataset):
             return_attention_mask=True,
             return_tensors="pt"
         )
-
         return{
 
             "input_ids": encoding["input_ids"].flatten(),
-
             "attention_mask": encoding["attention_mask"].flatten(),
-
-            "labels":
-            torch.tensor(
+            "labels": torch.tensor(
                 self.labels[idx],
                 dtype=torch.float
             )
