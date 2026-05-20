@@ -19,7 +19,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 df = pd.read_csv("data/train.csv")
 df = preprocess_dataframe(df)
 
-df = df.sample(10000, random_state=42)
+df = df.sample(20000, random_state=42)
 
 # X / y (ВАЖНО: читаемо и правильно)
 X = df["comment_text"]
@@ -37,8 +37,8 @@ X_train, X_valid, y_train, y_valid = train_test_split(
 
 # tokenizer
 # tokenizer = BertTokenizer.from_pretrained(MODEL_NAME)
-tokenizer = BertTokenizer.from_pretrained("/content/drive/MyDrive/bert_cache")
-
+# tokenizer = BertTokenizer.from_pretrained("/content/drive/MyDrive/bert_cache")
+tokenizer = BertTokenizer.from_pretrained("/content/drive/MyDrive/best_model")
 # datasets
 train_dataset = ToxicDataset(
     texts=X_train.values,
@@ -75,12 +75,18 @@ valid_loader = DataLoader(
 #     num_labels=len(LABEL_COLUMNS),
 #     problem_type="multi_label_classification"
 # )
+
+# model = BertForSequenceClassification.from_pretrained(
+#     "/content/drive/MyDrive/bert_cache",
+#     num_labels=len(LABEL_COLUMNS),
+#     problem_type="multi_label_classification"
+# )
+# ЯКЩО Треба буде донавчати вже найкращу модель, то можна завантажити її звідси:
 model = BertForSequenceClassification.from_pretrained(
-    "/content/drive/MyDrive/bert_cache",
+    "/content/drive/MyDrive/best_model",
     num_labels=len(LABEL_COLUMNS),
     problem_type="multi_label_classification"
 )
-
 # 🔥 ВРЕМЕННО ДОБАВИТЬ (один раз)
 # model.save_pretrained("/content/drive/MyDrive/bert_cache")
 # tokenizer.save_pretrained("/content/drive/MyDrive/bert_cache")
