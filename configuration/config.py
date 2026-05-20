@@ -1,6 +1,6 @@
 MODEL_NAME="bert-base-uncased"
 
-MAX_LENGTH=128
+MAX_LENGTH=256
 
 BATCH_SIZE=16
 

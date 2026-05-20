@@ -19,7 +19,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 df = pd.read_csv("data/train.csv")
 df = preprocess_dataframe(df)
 
-df = df.sample(20000, random_state=42)
+df = df.sample(10000, random_state=42)
 
 # X / y (ВАЖНО: читаемо и правильно)
 X = df["comment_text"]
@@ -83,7 +83,6 @@ model = BertForSequenceClassification.from_pretrained(
 
 # 🔥 ВРЕМЕННО ДОБАВИТЬ (один раз)
 # model.save_pretrained("/content/drive/MyDrive/bert_cache")
-
 # tokenizer.save_pretrained("/content/drive/MyDrive/bert_cache")
 
 model.to(device)
@@ -162,9 +161,9 @@ for epoch in range(EPOCHS):
     # save best model
     if f1 > best_f1:
         best_f1 = f1
-        torch.save(model.state_dict(), "models/best_model.pt")
+        model.save_pretrained("/content/drive/MyDrive/best_model")
+        tokenizer.save_pretrained("/content/drive/MyDrive/best_model")
         print("✅ Best model saved")
-
 
 print("\nTraining finished.")
 print(f"Best F1: {best_f1:.4f}")
