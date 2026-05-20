@@ -19,7 +19,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 df = pd.read_csv("data/train.csv")
 df = preprocess_dataframe(df)
 
-df = df.sample(10000, random_state=42)
+df = df.sample(20000, random_state=42)
 
 # X / y (ВАЖНО: читаемо и правильно)
 X = df["comment_text"]
@@ -150,6 +150,7 @@ for epoch in range(EPOCHS):
         total_loss += loss.item()
         avg_loss = total_loss / len(train_loader)
     print(f"Train Loss: {avg_loss:.4f}")
+
 
     # =========================
     # VALIDATION
