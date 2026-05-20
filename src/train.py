@@ -36,8 +36,8 @@ X_train, X_valid, y_train, y_valid = train_test_split(
 
 
 # tokenizer
-tokenizer = BertTokenizer.from_pretrained(MODEL_NAME)
-
+# tokenizer = BertTokenizer.from_pretrained(MODEL_NAME)
+tokenizer = BertTokenizer.from_pretrained("/content/drive/MyDrive/bert_cache")
 
 # datasets
 train_dataset = ToxicDataset(
@@ -70,16 +70,21 @@ valid_loader = DataLoader(
 
 
 # model
+# model = BertForSequenceClassification.from_pretrained(
+#     MODEL_NAME,
+#     num_labels=len(LABEL_COLUMNS),
+#     problem_type="multi_label_classification"
+# )
 model = BertForSequenceClassification.from_pretrained(
-    MODEL_NAME,
+    "/content/drive/MyDrive/bert_cache",
     num_labels=len(LABEL_COLUMNS),
     problem_type="multi_label_classification"
 )
 
 # 🔥 ВРЕМЕННО ДОБАВИТЬ (один раз)
-model.save_pretrained("/content/drive/MyDrive/bert_cache")
+# model.save_pretrained("/content/drive/MyDrive/bert_cache")
 
-tokenizer.save_pretrained("/content/drive/MyDrive/bert_cache")
+# tokenizer.save_pretrained("/content/drive/MyDrive/bert_cache")
 
 model.to(device)
 
