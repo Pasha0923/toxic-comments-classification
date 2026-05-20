@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.metrics import classification_report, f1_score
 
 
-def evaluate(model, dataloader, device, threshold=0.5):
+def evaluate(model, dataloader, device, threshold=None):
 
     model.eval()
 
@@ -27,6 +27,9 @@ def evaluate(model, dataloader, device, threshold=0.5):
             # sigmoid for multi-label
             probs = torch.sigmoid(outputs.logits).cpu().numpy()
 
+            # tresholding tuning(can be tuned for better F1)
+            if threshold is None:
+                threshold = threshold = [0.5, 0.3, 0.4, 0.2, 0.3, 0.2]
             preds = (probs > threshold).astype(int)
 
             all_preds.append(preds)

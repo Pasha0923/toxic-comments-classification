@@ -1,6 +1,6 @@
 import torch
 import pandas as pd
-
+import torch.nn as nn
 from sklearn.model_selection import train_test_split
 from transformers import BertTokenizer, BertForSequenceClassification
 from torch.utils.data import DataLoader
@@ -88,6 +88,15 @@ model = BertForSequenceClassification.from_pretrained(
 
 model.to(device)
 
+# 🔥 CLASS WEIGHTS (FIX IMBALANCE)
+label_counts = df[LABEL_COLUMNS].sum().values
+total = len(df)
+
+pos_weight = (total - label_counts) / (label_counts + 1e-6)
+pos_weight = torch.tensor(pos_weight, dtype=torch.float).to(device)
+
+criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+
 
 # optimizer
 optimizer = torch.optim.AdamW(
@@ -117,13 +126,19 @@ for epoch in range(EPOCHS):
         attention_mask = batch["attention_mask"].to(device)
         labels = batch["labels"].to(device)
 
+        # outputs = model(
+        #     input_ids=input_ids,
+        #     attention_mask=attention_mask,
+        #     labels=labels
+        # )
+        # loss = outputs.loss
+
         outputs = model(
             input_ids=input_ids,
-            attention_mask=attention_mask,
-            labels=labels
+            attention_mask=attention_mask
         )
+        loss = criterion(outputs.logits, labels.float())
 
-        loss = outputs.loss
 
         optimizer.zero_grad()
         loss.backward()
