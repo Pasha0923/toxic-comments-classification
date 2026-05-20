@@ -12,6 +12,11 @@ from src.preprocessing import preprocess_dataframe
 from configuration.config import *
 from src.evaluation import evaluate
 
+#1) history tracking
+train_losses = []
+val_losses = []
+val_f1_scores = []
+
 
 # device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -115,10 +120,7 @@ optimizer = torch.optim.AdamW(
 # tracking best model
 best_f1 = 0.0
 
-#1) history tracking
-train_losses = []
-val_losses = []
-val_f1_scores = []
+
 # 2) validation loss function
 def compute_val_loss(model, dataloader, device, criterion):
 
