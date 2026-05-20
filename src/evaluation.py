@@ -1,36 +1,52 @@
 import torch
 import numpy as np
 
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, f1_score
 
 
-def evaluate(model, dataloader,device):
+def evaluate(model, dataloader, device, threshold=0.5):
+
     model.eval()
 
-    predictions=[]
-    true_labels=[]
+    all_preds = []
+    all_labels = []
 
     with torch.no_grad():
 
         for batch in dataloader:
 
-            input_ids=(batch["input_ids"].to(device))
+            input_ids = batch["input_ids"].to(device)
+            attention_mask = batch["attention_mask"].to(device)
+            labels = batch["labels"].cpu().numpy()
 
-            attention_mask=(batch["attention_mask"].to(device))
-
-            labels=(batch["labels"].cpu().numpy())
-
-            outputs=model(
+            outputs = model(
                 input_ids=input_ids,
                 attention_mask=attention_mask
             )
 
-            probs=torch.sigmoid(outputs.logits)
+            # sigmoid for multi-label
+            probs = torch.sigmoid(outputs.logits).cpu().numpy()
 
-            preds=(probs>0.5).cpu().numpy()
+            preds = (probs > threshold).astype(int)
 
-            predictions.extend(preds)
+            all_preds.append(preds)
+            all_labels.append(labels)
 
-            true_labels.extend(labels)
+    # flatten
+    y_pred = np.vstack(all_preds)
+    y_true = np.vstack(all_labels)
 
-    print(classification_report(true_labels,predictions))
+    print("\nClassification Report:\n")
+    print(classification_report(y_true, y_pred, target_names=[
+        "toxic",
+        "severe_toxic",
+        "obscene",
+        "threat",
+        "insult",
+        "identity_hate"
+    ]))
+
+    # return macro F1 for checkpointing
+    f1 = f1_score(y_true, y_pred, average="macro")
+
+    return f1
