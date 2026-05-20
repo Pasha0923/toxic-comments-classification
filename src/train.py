@@ -26,7 +26,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 df = pd.read_csv("data/train.csv")
 df = preprocess_dataframe(df)
 
-df = df.sample(1000, random_state=42)
+df = df.sample(25000, random_state=42)
 
 # X / y (ВАЖНО: читаемо и правильно)
 X = df["comment_text"]
