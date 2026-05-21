@@ -1,39 +1,53 @@
 import json
-
 import torch
 import pandas as pd
-import torch.nn as nn
+
 from sklearn.model_selection import train_test_split
-from transformers import BertTokenizer, BertForSequenceClassification
+from transformers import (
+    BertTokenizer,
+    BertForSequenceClassification,
+    get_linear_schedule_with_warmup
+)
+
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+
 from src.dataset import ToxicDataset
 from src.preprocessing import preprocess_dataframe
-from configuration.config import *
 from src.evaluation import evaluate
+from src.losses import FocalLoss
 
-#1) history tracking
-train_losses = []
-val_losses = []
-val_f1_scores = []
+from configuration.config import *
 
 
-# device
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# ===================================
+# DEVICE
+# ===================================
+
+device = torch.device(
+    "cuda" if torch.cuda.is_available()
+    else "cpu"
+)
 
 
-# load data
+# ===================================
+# LOAD DATA
+# ===================================
+
 df = pd.read_csv("data/train.csv")
+
 df = preprocess_dataframe(df)
 
-df = df.sample(25000, random_state=42)
+df = df.sample(20000,random_state=42)
 
-# X / y (ВАЖНО: читаемо и правильно)
 X = df["comment_text"]
 y = df[LABEL_COLUMNS].values
 
 
-# split
+# ===================================
+# SPLIT
+# ===================================
+
 X_train, X_valid, y_train, y_valid = train_test_split(
     X,
     y,
@@ -42,11 +56,16 @@ X_train, X_valid, y_train, y_valid = train_test_split(
 )
 
 
-# tokenizer
-# tokenizer = BertTokenizer.from_pretrained(MODEL_NAME)
+# ===================================
+# TOKENIZER
+# ===================================
+
 tokenizer = BertTokenizer.from_pretrained("/content/drive/MyDrive/bert_cache")
-# tokenizer = BertTokenizer.from_pretrained("/content/drive/MyDrive/best_model")
-# datasets
+
+# ===================================
+# DATASETS
+# ===================================
+
 train_dataset = ToxicDataset(
     texts=X_train.values,
     labels=y_train,
@@ -62,7 +81,10 @@ valid_dataset = ToxicDataset(
 )
 
 
-# dataloaders
+# ===================================
+# DATALOADERS
+# ===================================
+
 train_loader = DataLoader(
     train_dataset,
     batch_size=BATCH_SIZE,
@@ -76,63 +98,75 @@ valid_loader = DataLoader(
 )
 
 
-# model
-# model = BertForSequenceClassification.from_pretrained(
-#     MODEL_NAME,
-#     num_labels=len(LABEL_COLUMNS),
-#     problem_type="multi_label_classification"
-# )
+# ===================================
+# MODEL
+# ===================================
 
 model = BertForSequenceClassification.from_pretrained(
     "/content/drive/MyDrive/bert_cache",
     num_labels=len(LABEL_COLUMNS),
     problem_type="multi_label_classification"
 )
-# ЯКЩО Треба буде донавчати вже найкращу модель, то можна завантажити її звідси:
-# model = BertForSequenceClassification.from_pretrained(
-#     "/content/drive/MyDrive/best_model",
-#     num_labels=len(LABEL_COLUMNS),
-#     problem_type="multi_label_classification"
-# )
-# 🔥 ВРЕМЕННО ДОБАВИТЬ (один раз)
-# model.save_pretrained("/content/drive/MyDrive/bert_cache")
-# tokenizer.save_pretrained("/content/drive/MyDrive/bert_cache")
 
 model.to(device)
 
-# 🔥 CLASS WEIGHTS (FIX IMBALANCE)
-label_counts = df[LABEL_COLUMNS].sum().values
-total = len(df)
 
-pos_weight = (total - label_counts) / (label_counts + 1e-6)
-pos_weight = torch.tensor(pos_weight, dtype=torch.float).to(device)
+# ===================================
+# LOSS
+# ===================================
 
-criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+criterion = FocalLoss(alpha=1,gamma=2)
 
+# ===================================
+# OPTIMIZER
+# ===================================
 
-# optimizer
 optimizer = torch.optim.AdamW(
     model.parameters(),
     lr=LEARNING_RATE
 )
 
 
-# tracking best model
-best_f1 = 0.0
+# ===================================
+# SCHEDULER
+# ===================================
 
+total_steps = (len(train_loader)* EPOCHS)
 
-# 2) validation loss function
-def compute_val_loss(model, dataloader, device, criterion):
+scheduler = get_linear_schedule_with_warmup(
+    optimizer,
+    num_warmup_steps=int(total_steps*0.1),
+    num_training_steps=total_steps
+)
+
+# ===================================
+# HISTORY
+# ===================================
+
+train_losses = []
+val_losses = []
+val_f1_scores = []
+
+best_f1 = 0
+
+# ===================================
+# VALIDATION LOSS
+# ===================================
+
+def compute_val_loss():
 
     model.eval()
+
     total_loss = 0
 
     with torch.no_grad():
 
-        for batch in dataloader:
+        for batch in valid_loader:
 
             input_ids = batch["input_ids"].to(device)
+
             attention_mask = batch["attention_mask"].to(device)
+
             labels = batch["labels"].to(device)
 
             outputs = model(
@@ -140,82 +174,116 @@ def compute_val_loss(model, dataloader, device, criterion):
                 attention_mask=attention_mask
             )
 
-            loss = criterion(outputs.logits, labels.float())
+            loss = criterion(
+                outputs.logits,
+                labels.float()
+            )
+
             total_loss += loss.item()
 
-    return total_loss / len(dataloader)
-# training loop
+    return total_loss / len(valid_loader)
+
+# ===================================
+# TRAINING LOOP
+# ===================================
+
 for epoch in range(EPOCHS):
 
-    print(f"\n===== Epoch {epoch + 1}/{EPOCHS} =====")
+    print(f"\n===== Epoch {epoch+1}/{EPOCHS} =====")
 
     model.train()
+
     total_loss = 0
 
     for batch in tqdm(
         train_loader,
         desc=f"Epoch {epoch+1}/{EPOCHS}"
-):
+    ):
 
-        input_ids = batch["input_ids"].to(device)
-        attention_mask = batch["attention_mask"].to(device)
-        labels = batch["labels"].to(device)
+        input_ids = batch[
+            "input_ids"
+        ].to(device)
 
-        # outputs = model(
-        #     input_ids=input_ids,
-        #     attention_mask=attention_mask,
-        #     labels=labels
-        # )
-        # loss = outputs.loss
+        attention_mask = batch[
+            "attention_mask"
+        ].to(device)
+
+        labels = batch[
+            "labels"
+        ].to(device)
+
 
         outputs = model(
             input_ids=input_ids,
             attention_mask=attention_mask
         )
-        loss = criterion(outputs.logits, labels.float())
 
+        loss = criterion(
+            outputs.logits,
+            labels.float()
+        )
 
         optimizer.zero_grad()
+
         loss.backward()
 
-        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+        torch.nn.utils.clip_grad_norm_(model.parameters(),1.0)
 
         optimizer.step()
 
+        scheduler.step()
+
         total_loss += loss.item()
-        avg_loss = total_loss / len(train_loader)
-    #4) tracking history
-    print(f"Train Loss: {avg_loss:.4f}")
+
+
+    avg_loss = (total_loss/ len(train_loader))
+
     train_losses.append(avg_loss)
 
+    print(f"Train Loss: {avg_loss:.4f}")
 
-    # =========================
+
+    # ====================
     # VALIDATION
-    # =========================
-    f1 = evaluate(model, valid_loader, device)
-    print(f"Validation F1 (macro): {f1:.4f}")
+    # ====================
 
-    # 5) compute validation loss
-    val_loss = compute_val_loss(model, valid_loader, device, criterion)
+    val_loss = compute_val_loss()
     val_losses.append(val_loss)
-    val_f1_scores.append(f1)
+
     print(f"Validation Loss: {val_loss:.4f}")
 
-    # save best model
+    f1 = evaluate(model,valid_loader,device)
+    val_f1_scores.append(f1)
+
+    print(f"Validation F1: {f1:.4f}")
+
+    # ====================
+    # SAVE MODEL
+    # ====================
+
     if f1 > best_f1:
+
         best_f1 = f1
-        model.save_pretrained("/content/drive/MyDrive/best_model_v2")
-        tokenizer.save_pretrained("/content/drive/MyDrive/best_model_v2")
+        model.save_pretrained("/content/drive/MyDrive/best_model_v3")
+        tokenizer.save_pretrained("/content/drive/MyDrive/best_model_v3")
         print("✅ Best model saved")
 
+
+# ===================================
+# SAVE HISTORY
+# ===================================
+
 history = {
+
     "train_losses": train_losses,
     "val_losses": val_losses,
     "val_f1": val_f1_scores
 }
 
-with open("history.json", "w") as f:
-    json.dump(history, f)
+
+with open("history.json","w") as f:
+
+    json.dump(history,f)
 
 print("\nTraining finished.")
 print(f"Best F1: {best_f1:.4f}")

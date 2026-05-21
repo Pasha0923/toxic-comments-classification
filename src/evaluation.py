@@ -14,29 +14,39 @@ LABEL_NAMES = [
 
 
 # =========================
-# THRESHOLD SEARCH (OPTIONAL)
+# THRESHOLD SEARCH
 # =========================
 def find_best_thresholds(y_true, probs):
-    thresholds = np.arange(0.1, 0.9, 0.05)
+
+    thresholds = np.arange(0.1,0.9,0.05)
+
     best_t = [0.5] * len(LABEL_NAMES)
 
     for i in range(len(LABEL_NAMES)):
+
         best_f1 = 0
+
         for t in thresholds:
+
             preds = (probs[:, i] > t).astype(int)
-            f1 = f1_score(y_true[:, i], preds)
+
+            f1 = f1_score(
+                y_true[:, i],
+                preds,
+                zero_division=0
+            )
 
             if f1 > best_f1:
+
                 best_f1 = f1
                 best_t[i] = t
 
     return best_t
 
-
 # =========================
 # EVALUATE
 # =========================
-def evaluate(model, dataloader, device, threshold=None):
+def evaluate(model,dataloader,device,threshold=None):
 
     model.eval()
 
@@ -49,6 +59,7 @@ def evaluate(model, dataloader, device, threshold=None):
 
             input_ids = batch["input_ids"].to(device)
             attention_mask = batch["attention_mask"].to(device)
+
             labels = batch["labels"].cpu().numpy()
 
             outputs = model(
@@ -66,33 +77,54 @@ def evaluate(model, dataloader, device, threshold=None):
 
 
     # =========================
-    # THRESHOLD HANDLING
+    # AUTO THRESHOLD SEARCH
     # =========================
+
     if threshold is None:
-        threshold = [0.5] * len(LABEL_NAMES)
+
+        threshold = find_best_thresholds(
+            y_true,
+            y_probs
+        )
+
+        print("\nBest thresholds:")
+
+        for label, t in zip(LABEL_NAMES,threshold):
+
+            print(f"{label}: {t:.2f}")
 
 
-    y_pred = np.zeros_like(y_probs)
+    # =========================
+    # PREDICTIONS
+    # =========================
+
+    y_pred = np.zeros_like(
+        y_probs
+    )
 
     for i in range(len(LABEL_NAMES)):
+
         y_pred[:, i] = (y_probs[:, i] > threshold[i]).astype(int)
 
 
     # =========================
     # REPORT
     # =========================
+
     print("\nClassification Report:\n")
 
-    print(classification_report(
+    print(
+        classification_report(
+            y_true,
+            y_pred,
+            target_names=LABEL_NAMES,
+            zero_division=0
+        )
+    )
+    f1 = f1_score(
         y_true,
         y_pred,
-        target_names=LABEL_NAMES
-    ))
-
-
-    # =========================
-    # METRIC
-    # =========================
-    f1 = f1_score(y_true, y_pred, average="macro")
+        average="macro"
+    )
 
     return f1
