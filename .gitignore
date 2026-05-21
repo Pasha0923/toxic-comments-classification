@@ -6,8 +6,6 @@ venv/
 .ipynb_checkpoints/
 
 models/
-*.pt
-*.pth
 
 .env
 
