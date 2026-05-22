@@ -165,23 +165,28 @@ Focal Loss dynamically reduces the contribution of easy examples and focuses tra
 **Parameters:**
 
 alpha=1 — class balancing factor
+
 gamma=2 — focuses learning on hard examples
 
 **Benefits:**
 
-Improves learning for underrepresented classes
-Reduces the dominance of majority classes
-Helps increase Macro F1 score
-Makes the model more sensitive to rare toxic categories
+- Improves learning for underrepresented classes
+- Reduces the dominance of majority classes
+- Helps increase Macro F1 score
+- Makes the model more sensitive to rare toxic categories
 
 ## Training Strategy
 
 To improve rare classes:
 
 ✔ Focal Loss
+
 ✔ Threshold optimization
+
 ✔ Learning rate scheduler
+
 ✔ Gradient clipping
+
 ✔ Fine-tuning pretrained BERT
 
 ## Model Training Configuration
@@ -202,23 +207,24 @@ Jigsaw Toxic Comment Classification Dataset
 ```bash
 https://www.kaggle.com/c/jigsaw-toxic-comment-classification-challenge/data
 ```
-Full dataset:  **159,571** samples
-Training size used: **20,000** samples
+- Full dataset:  **159,571** samples
+- Training size used: **20,000** samples
 
 Although the original dataset is significantly larger, the model was intentionally trained on a smaller subset to reduce training time and demonstrate the complete workflow.
 
 ## 📊 Final Evaluation Summary
 
-    |  Class   |  precision | recall | f1-score | support |
-    |-------   |------------| -------|----------| --------|
-       toxic   |    0.84    |  0.84  |   0.84   |   399   |
- severe_toxic  |    0.48    |  0.66  |   0.56   |   38    |
-       obscene |    0.86    |  0.79  |   0.82   |   218   |
-       threat  |    1.00    |  0.50  |   0.67   |    6    |
-       insult  |    0.65    |  0.88  |   0.75   |   204   |
- identity_hate |    0.81    |  0.36  |   0.50   |   36    | 
+ |     Class    |  precision | recall | f1-score | support |
+ |------------- |------------| -------|----------| --------|
+ |    toxic     |    0.84    |  0.84  |   0.84   |   399   |
+ | severe_toxic |    0.48    |  0.66  |   0.56   |   38    |
+ |    obscene   |    0.86    |  0.79  |   0.82   |   218   |
+ |    threat    |    1.00    |  0.50  |   0.67   |    6    |
+ |   insult     |    0.65    |  0.88  |   0.75   |   204   |
+ |identity_hate |    0.81    |  0.36  |   0.50   |   36    | 
 
  Best Validation Macro F1  | 69% 
+ 
  Test Macro F1             | 52% 
 
  ## Notebook (demo.ipynb)
