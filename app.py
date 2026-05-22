@@ -1,12 +1,13 @@
+import json
 import os
 import streamlit as st
 import torch
+import numpy as np
 import pandas as pd
 from transformers import (BertTokenizer,BertForSequenceClassification)
 import plotly.express as px
 from transformers.utils import logging
-
-
+from configuration.config import MAX_LENGTH
 logging.set_verbosity_error()
 
 # ==========================
@@ -19,7 +20,16 @@ MODEL_PATH = os.path.join(BASE_DIR,"models")
 
 HISTORY_PATH = os.path.join(BASE_DIR,"outputs","history.json")
 
+THRESHOLDS_PATH=os.path.join(BASE_DIR,"outputs","thresholds.json")
 
+LABEL_NAMES=["toxic","severe_toxic","obscene","threat","insult","identity_hate"]
+
+# load thresholds
+with open(THRESHOLDS_PATH,"r") as f:
+    BEST_THRESHOLDS = np.array(
+        json.load(f),
+        dtype=np.float32
+    )
 # ==========================
 # PAGE SETTINGS
 # ==========================
@@ -31,7 +41,6 @@ st.set_page_config(
     layout="wide"
 )
 
-
 # ==========================
 # CONFIG
 # ==========================
@@ -41,23 +50,6 @@ device = torch.device(
     if torch.cuda.is_available()
     else "cpu"
 )
-
-MAX_LENGTH=128
-
-
-LABEL_NAMES=[
-
-    "toxic",
-    "severe_toxic",
-    "obscene",
-    "threat",
-    "insult",
-    "identity_hate"
-]
-
-
-BEST_THRESHOLDS=[0.50,0.40,0.50,0.35,0.35,0.60]
-
 
 # ==========================
 # LOAD MODEL
@@ -84,20 +76,6 @@ tokenizer,model=load_model()
 
 st.sidebar.title("⚙️ Settings")
 
-# st.sidebar.markdown("---")
-
-# selected_example = st.sidebar.selectbox(
-#     "💬 Try examples",
-#     [
-#         "",
-#         "Have a nice day",
-#         "You are stupid",
-#         "I hate you",
-#         "I will kill you",
-#         "You are an idiot"
-#     ]
-# )
-
 st.sidebar.markdown("---")
 
 st.sidebar.markdown("## 📊 Model info")
@@ -111,15 +89,6 @@ st.sidebar.info(
 st.sidebar.markdown("---")
 
 st.sidebar.markdown("## 🎯 Toxic classes")
-
-LABEL_NAMES = [
-    "toxic",
-    "severe_toxic",
-    "obscene",
-    "threat",
-    "insult",
-    "identity_hate"
-]
 
 icons = {
     "toxic": "☠️",
@@ -147,147 +116,81 @@ for c in LABEL_NAMES:
 
 st.sidebar.markdown("---")
 
-
-
 # ==========================
 # TITLE
 # ==========================
 
-st.title(
-    "🤖 Toxic Comment Classifier"
-)
+st.title("🤖 Toxic Comment Classifier")
 
 st.write(
-
 """
 Detect toxicity in comments using BERT.
 """
 )
-
-
-
 # ==========================
 # INPUT
 # ==========================
 
-text=st.text_area(
-
-    "Enter comment",
-
-    # value=selected_example,
-
-    height=150
-)
-
-
+text=st.text_area("Enter comment",height=150)
 
 # ==========================
 # PREDICT
 # ==========================
 
-if st.button(
-    "Analyze"
-):
+if st.button("Analyze"):
 
     if text.strip()=="":
 
-        st.warning(
-            "Please enter text"
-        )
+        st.warning("Please enter text")
 
     else:
 
-        with st.spinner(
-            "Analyzing..."
-        ):
-
+        with st.spinner("Analyzing..."):
 
             inputs=tokenizer(
-
                 text,
-
                 return_tensors="pt",
                 truncation=True,
                 padding=True,
                 max_length=MAX_LENGTH
             )
 
-
             inputs={
-
                 k:v.to(device)
-
                 for k,v in inputs.items()
             }
 
-
             with torch.no_grad():
 
-                outputs=model(
-                    **inputs
-                )
+                outputs=model(**inputs)
+                probs=(torch.sigmoid(outputs.logits).cpu().numpy()[0])
 
-
-                probs=(
-                    torch.sigmoid(
-                        outputs.logits
-                    )
-                    .cpu()
-                    .numpy()[0]
-                )
-
-
-        predictions=(
-            probs >
-            BEST_THRESHOLDS
-        ).astype(int)
-
-
+        predictions=(probs > BEST_THRESHOLDS).astype(int)
 
         detected=[]
 
         for label,pred in zip(
-
             LABEL_NAMES,
             predictions
         ):
 
             if pred==1:
-
-                detected.append(
-                    label
-                )
-
-
+                detected.append(label)
 
         st.markdown("---")
 
 
-        if len(
-            detected
-        )>0:
+        if len(detected)>0:
 
-            st.error(
-                "⚠ Toxic comment detected"
-            )
+            st.error("⚠ Toxic comment detected")
 
-            st.write(
-                "Detected toxic classes:"
-            )
+            st.write("Detected toxic classes:")
 
             for x in detected:
 
-                st.write(
-                    f"• {x}"
-                )
-
+                st.write(f"• {x}")
         else:
-
-            st.success(
-                "✅ Non-toxic comment"
-            )
-
-
+            st.success("✅ Non-toxic comment")
 
         # ==================
         # TABLE
@@ -295,80 +198,42 @@ if st.button(
 
         results=pd.DataFrame({
 
-            "Class":
-                LABEL_NAMES,
+            "Class":LABEL_NAMES,
 
-            "Probability":
-                probs,
+            "Probability":probs,
 
-            "Threshold":
-                BEST_THRESHOLDS
+            "Threshold":BEST_THRESHOLDS
         })
 
-
-        results[
-            "Probability %"
-        ]=(
-
-            results[
-                "Probability"
-            ]*100
-
-        ).round(2)
+        results["Probability %"]=(results["Probability"]*100).round(2)
 
 
-        st.subheader(
-            "Prediction Details"
-        )
+        st.subheader("Prediction Details")
 
 
         st.dataframe(
 
             results.sort_values(
-
                 by="Probability %",
                 ascending=False
             ),
-
             use_container_width=True
         )
-
-
-
         # ==================
         # BARS
         # ==================
 
-        st.subheader(
-            "Class probabilities"
-        )
+        st.subheader("Class probabilities")
 
+        fig=px.bar(results,x="Class",y="Probability %")
 
-        fig=px.bar(
-
-            results,
-
-            x="Class",
-
-            y="Probability %"
-        )
-
-        st.plotly_chart(
-
-            fig,
-
-            use_container_width=True
-        )
-
-
+        st.plotly_chart(fig,use_container_width=True)
 
         # ==================
         # PROGRESS BARS
         # ==================
 
-        st.subheader(
-            "Scores"
-        )
+        st.subheader("Scores")
 
         for _,row in results.iterrows():
 

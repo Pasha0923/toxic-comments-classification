@@ -3,3 +3,10 @@ scikit-learn
 pandas
 numpy
 matplotlib
+streamlit
+plotly
+tqdm 
+
+#  pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu 
+# torch        2.12.0+cpu
+# torchvision  0.27.0+cpu

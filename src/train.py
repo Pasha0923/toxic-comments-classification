@@ -1,24 +1,15 @@
 import json
 import torch
 import pandas as pd
-
 from sklearn.model_selection import train_test_split
-from transformers import (
-    BertTokenizer,
-    BertForSequenceClassification,
-    get_linear_schedule_with_warmup
-)
-
+from transformers import (BertTokenizer,BertForSequenceClassification,get_linear_schedule_with_warmup)
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-
 from src.dataset import ToxicDataset
 from src.preprocessing import preprocess_dataframe
 from src.evaluation import evaluate
-from src.losses import FocalLoss
-
+from src.focalloss import FocalLoss
 from configuration.config import *
-
 
 # ===================================
 # DEVICE
@@ -28,7 +19,6 @@ device = torch.device(
     "cuda" if torch.cuda.is_available()
     else "cpu"
 )
-
 
 # ===================================
 # LOAD DATA
@@ -43,7 +33,6 @@ df = df.sample(20000,random_state=42)
 X = df["comment_text"]
 y = df[LABEL_COLUMNS].values
 
-
 # ===================================
 # SPLIT
 # ===================================
@@ -54,7 +43,6 @@ X_train, X_valid, y_train, y_valid = train_test_split(
     test_size=0.2,
     random_state=RANDOM_STATE
 )
-
 
 # ===================================
 # TOKENIZER
@@ -80,7 +68,6 @@ valid_dataset = ToxicDataset(
     max_length=MAX_LENGTH
 )
 
-
 # ===================================
 # DATALOADERS
 # ===================================
@@ -97,7 +84,6 @@ valid_loader = DataLoader(
     shuffle=False
 )
 
-
 # ===================================
 # MODEL
 # ===================================
@@ -109,7 +95,6 @@ model = BertForSequenceClassification.from_pretrained(
 )
 
 model.to(device)
-
 
 # ===================================
 # LOSS
@@ -125,7 +110,6 @@ optimizer = torch.optim.AdamW(
     model.parameters(),
     lr=LEARNING_RATE
 )
-
 
 # ===================================
 # SCHEDULER
@@ -279,7 +263,6 @@ history = {
     "val_losses": val_losses,
     "val_f1": val_f1_scores
 }
-
 
 with open("history.json","w") as f:
 

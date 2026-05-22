@@ -1,28 +1,16 @@
 import torch
 import numpy as np
 from sklearn.metrics import classification_report, f1_score
+from configuration.config import LABEL_COLUMNS
 
-
-LABEL_NAMES = [
-    "toxic",
-    "severe_toxic",
-    "obscene",
-    "threat",
-    "insult",
-    "identity_hate"
-]
-
-
-# =========================
-# THRESHOLD SEARCH
-# =========================
+# function to find best thresholds for each class
 def find_best_thresholds(y_true, probs):
 
     thresholds = np.arange(0.1,0.9,0.05)
 
-    best_t = [0.5] * len(LABEL_NAMES)
+    best_t = [0.5] * len(LABEL_COLUMNS)
 
-    for i in range(len(LABEL_NAMES)):
+    for i in range(len(LABEL_COLUMNS)):
 
         best_f1 = 0
 
@@ -43,9 +31,8 @@ def find_best_thresholds(y_true, probs):
 
     return best_t
 
-# =========================
-# EVALUATE
-# =========================
+
+# evaluation function
 def evaluate(model,dataloader,device,threshold=None):
 
     model.eval()
@@ -75,49 +62,33 @@ def evaluate(model,dataloader,device,threshold=None):
     y_true = np.vstack(all_labels)
     y_probs = np.vstack(all_probs)
 
-
-    # =========================
-    # AUTO THRESHOLD SEARCH
-    # =========================
-
+# auto threshold search
+    
     if threshold is None:
-
         threshold = find_best_thresholds(
             y_true,
             y_probs
         )
-
         print("\nBest thresholds:")
 
-        for label, t in zip(LABEL_NAMES,threshold):
-
+        for label, t in zip(LABEL_COLUMNS,threshold):
             print(f"{label}: {t:.2f}")
+   
+    # predictions based on thresholds
+    y_pred = np.zeros_like(y_probs)
 
-
-    # =========================
-    # PREDICTIONS
-    # =========================
-
-    y_pred = np.zeros_like(
-        y_probs
-    )
-
-    for i in range(len(LABEL_NAMES)):
+    for i in range(len(LABEL_COLUMNS)):
 
         y_pred[:, i] = (y_probs[:, i] > threshold[i]).astype(int)
-
-
-    # =========================
-    # REPORT
-    # =========================
+   
+    # Classification Report
 
     print("\nClassification Report:\n")
-
     print(
         classification_report(
             y_true,
             y_pred,
-            target_names=LABEL_NAMES,
+            target_names=LABEL_COLUMNS,
             zero_division=0
         )
     )
