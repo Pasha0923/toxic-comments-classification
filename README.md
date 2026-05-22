@@ -58,11 +58,11 @@ Toxic Comment Classification/
 ## Project Pipeline
 The project includes several stages:
 
-1. Exploratory Data Analysis (EDA)
+**1. Exploratory Data Analysis (EDA)**
 
 Notebook: eda.ipynb
 
-Performed analysis:
+**Performed analysis:**
 
 - Missing values check
 - Duplicate analysis
@@ -72,7 +72,7 @@ Performed analysis:
 - Histograms and visualizations
 - Dataset statistics
 
-2. Data preprocessing
+**2. Data preprocessing**
 
 The preprocessing pipeline was intentionally kept minimal to preserve the original semantic information in toxic comments.
 
@@ -84,7 +84,7 @@ Implemented preprocessing steps:
 
 Minimal preprocessing was used because BERT already contains its own tokenization and language representation mechanisms.
 
-3. Transfer Learning
+**3. Transfer Learning**
 
 Instead of training from scratch:
 
@@ -113,19 +113,7 @@ Fine-tuning allows the pretrained language model to adapt to the specific task w
 
 **Architecture:**
 
-Input Text
-        ↓
-BERT Tokenizer
-        ↓
-Pretrained BERT Encoder
-        ↓
-Dropout
-        ↓
-Linear Classification Layer
-        ↓
-Sigmoid activation
-        ↓
-6 probability outputs
+Input Text -> BERT Tokenizer ->  Pretrained BERT Encoder -> Dropout -> Linear Classification Layer -> Sigmoid activation ->  6 probability outputs
 
 Since the task is multi-label classification, sigmoid activation was used instead of softmax, allowing multiple classes to be predicted simultaneously.
 
@@ -138,11 +126,11 @@ Download pretrained weights from:
 https://drive.google.com/drive/folders/12TDF9qmEYu99A2PNVNRylADEYe0BYRUm?usp=sharing
 ```
 
-After downloading:
+### After downloading:
 
-Extract the downloaded archive
-Copy the folder into:
-models/
+**1. Extract the downloaded archive**
+
+**2. Copy model weights in folder models/**
 
 Final project structure:
 
@@ -224,10 +212,10 @@ Although the original dataset is significantly larger, the model was intentional
  |identity_hate |    0.81    |  0.36  |   0.50   |   36    | 
 
  Best Validation Macro F1  | 69% 
- 
+
  Test Macro F1             | 52% 
 
- ## Notebook (demo.ipynb)
+ ## Notebook (toxic_demo_v3.ipynb)
 
 The toxic_demo_v3.ipynb notebook contains:
 
@@ -242,12 +230,16 @@ The toxic_demo_v3.ipynb notebook contains:
 
 The project also contains an interactive Streamlit interface.
 
-Features:
+The app allows:
 
 ✔ Input custom comments
+
 ✔ Toxic / Non-toxic prediction
+
 ✔ Probability visualization
+
 ✔ Threshold-based classification
+
 ✔ Interactive charts
 
 ## ⚡ Local Installation 
