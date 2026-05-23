@@ -273,3 +273,32 @@ https://drive.google.com/drive/folders/12TDF9qmEYu99A2PNVNRylADEYe0BYRUm?usp=sha
 ```bash
 streamlit run app.py
 ```
+
+## 🐳 Run with Docker Compose
+
+1. **Clone the repository:**
+
+```bash
+git clone https://github.com/Pasha0923/toxic-comments-classification.git
+cd toxic-comments-classification
+```
+2. **Download model weights**
+
+Download pretrained weights and place them into folder : models/
+```bash
+https://drive.google.com/drive/folders/12TDF9qmEYu99A2PNVNRylADEYe0BYRUm?usp=sharing
+```
+3. **Build and run container**
+
+```bash
+docker compose up --build
+```
+4. **Open in browser**
+```bash
+http://localhost:8501
+```
+
+## 📌 **Contacts**
+
+ - GitHub Repository : https://github.com/Pasha0923/toxic-comments-classification
+ - email : pavelsai2309@gmail.com
