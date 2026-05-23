@@ -33,7 +33,7 @@ Toxic Comment Classification/
 │   ├── dataset.py
 │   ├── preprocessing.py
 │   ├── evaluation.py
-│   ├── focalloss.py
+│   └── focalloss.py
 │ 
 ├── data/
 │   ├── train.csv
@@ -48,10 +48,13 @@ Toxic Comment Classification/
 │
 ├── outputs/
 │   ├── history.json
-│   ├── thresholds.json
+│   └── thresholds.json
 │
-│── .gitignore
 ├── app.py
+│── .gitignore
+├── Dockerfile
+├── docker-compose.yml
+├── .dockerignore
 ├── requirements.txt
 ├── README.md   
 ```
@@ -95,10 +98,12 @@ Instead of training from scratch:
 
 The project uses a pretrained **BERT-base-uncased model** from Hugging Face for multi-label toxic comment classification.
 
-**Workflow:**
+### **Workflow:**
 
 1) A pretrained BERT model was loaded **bert-base-uncased**
 2) A classification head for six toxic categories was added:
+
+**Classes**
 
 - toxic 
 - severe_toxic 
@@ -111,7 +116,7 @@ The project uses a pretrained **BERT-base-uncased model** from Hugging Face for 
 
 Fine-tuning allows the pretrained language model to adapt to the specific task while preserving the language understanding learned from large-scale text corpora.
 
-**Architecture:**
+### **Architecture:**
 
 Input Text -> BERT Tokenizer ->  Pretrained BERT Encoder -> Dropout -> Linear Classification Layer -> Sigmoid activation ->  6 probability outputs
 
@@ -132,7 +137,7 @@ https://drive.google.com/drive/folders/12TDF9qmEYu99A2PNVNRylADEYe0BYRUm?usp=sha
 
 **2. Copy model weights in folder models/**
 
-Final project structure:
+**Final project structure:**
 
 ```bash
 ├── models/

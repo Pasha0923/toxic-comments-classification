@@ -25,7 +25,7 @@ THRESHOLDS_PATH=os.path.join(BASE_DIR,"outputs","thresholds.json")
 
 LABEL_NAMES=["toxic","severe_toxic","obscene","threat","insult","identity_hate"]
 
-# load thresholds
+# LOAD THRESHOLDS
 with open(THRESHOLDS_PATH,"r") as f:
     BEST_THRESHOLDS = np.array(
         json.load(f),
@@ -221,7 +221,7 @@ if st.button("Analyze"):
             use_container_width=True
         )
         # ==================
-        # BARS
+        # BAR CHART
         # ==================
 
         st.subheader("Class probabilities")
@@ -231,7 +231,7 @@ if st.button("Analyze"):
         st.plotly_chart(fig,use_container_width=True)
 
         # ==================
-        # PROGRESS BARS
+        # PROGRESS BAR
         # ==================
 
         st.subheader("Scores")

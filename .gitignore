@@ -1,16 +1,10 @@
-__pycache__/
-*.pyc
-
-venv/
-.venv/
-.ipynb_checkpoints/
-
-models/
-
-.env
-
-data/
-
-# IDE
 .vscode/
 .idea/
+.ipynb_checkpoints/
+models/
+data/
+__pycache__/
+*.pyc
+venv/
+.venv/
+
