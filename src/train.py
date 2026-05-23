@@ -15,10 +15,7 @@ from configuration.config import *
 # DEVICE
 # ===================================
 
-device = torch.device(
-    "cuda" if torch.cuda.is_available()
-    else "cpu"
-)
+device = torch.device("cuda" if torch.cuda.is_available()else "cpu")
 
 # ===================================
 # LOAD DATA
@@ -131,7 +128,6 @@ scheduler = get_linear_schedule_with_warmup(
 train_losses = []
 val_losses = []
 val_f1_scores = []
-
 best_f1 = 0
 
 # ===================================
@@ -196,7 +192,6 @@ for epoch in range(EPOCHS):
         labels = batch[
             "labels"
         ].to(device)
-
 
         outputs = model(
             input_ids=input_ids,

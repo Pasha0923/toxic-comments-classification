@@ -4,7 +4,11 @@ import torch.nn.functional as F
 
 
 class FocalLoss(nn.Module):
-
+    """
+    Focal Loss for handling class imbalance.
+    Gives more attention to difficult
+    and rare examples during training.
+    """
     def __init__(self,alpha=1,gamma=2):
 
         super().__init__()

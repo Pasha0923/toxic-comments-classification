@@ -3,7 +3,11 @@ from torch.utils.data import Dataset
 
 
 class ToxicDataset(Dataset):
-
+    """
+    Custom PyTorch dataset for toxic comment classification.
+    Converts text into BERT input format
+    and returns tokenized data with labels.
+    """
     def __init__(self,texts,labels,tokenizer,max_length):
         self.texts=texts
         self.labels=labels
@@ -11,11 +15,13 @@ class ToxicDataset(Dataset):
         self.max_length=max_length
 
     def __len__(self):
-
+        
         return len(self.texts)
     
     def __getitem__(self,idx):
-
+        """
+        Returns one tokenized sample and  labels for one sample.
+        """
         text=str(self.texts[idx])
 
         encoding=self.tokenizer(
