@@ -258,11 +258,18 @@ venv\Scripts\activate
 ```bash
 pip install -r requirements.txt
 ```
-4. **Install PyTorch CPU versions:**
+4. **Install PyTorch CPU-only:**
 ```bash
-pip install torch==2.5.1+cpu torchvision==0.20.1+cpu --index-url https://download.pytorch.org/whl/cpu
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 ```
-4. **Run the Streamlit application:**
+5. **Download model weights**
+
+Download pretrained weights and place them into folder : models/
+
+```bash
+https://drive.google.com/drive/folders/12TDF9qmEYu99A2PNVNRylADEYe0BYRUm?usp=sharing
+```
+6. **Run the Streamlit application:**
 ```bash
 streamlit run app.py
 ```

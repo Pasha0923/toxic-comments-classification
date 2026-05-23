@@ -4,8 +4,9 @@ import streamlit as st
 import torch
 import numpy as np
 import pandas as pd
-from transformers import (BertTokenizer,BertForSequenceClassification)
 import plotly.express as px
+
+from transformers import (BertTokenizer,BertForSequenceClassification)
 from transformers.utils import logging
 from configuration.config import MAX_LENGTH
 logging.set_verbosity_error()

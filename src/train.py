@@ -48,6 +48,7 @@ X_train, X_valid, y_train, y_valid = train_test_split(
 # TOKENIZER
 # ===================================
 
+# tokenizer = BertTokenizer.from_pretrained(MODEL_NAME)
 tokenizer = BertTokenizer.from_pretrained("/content/drive/MyDrive/bert_cache")
 
 # ===================================
