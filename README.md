@@ -303,7 +303,13 @@ docker compose up --build
 http://localhost:8501
 ```
 
-## 📌 **Contacts**
+## Docker Notes
+- Uses CPU-only PyTorch build
+- No CUDA dependencies required
+- Fully reproducible environment
+- Streamlit runs inside container
+
+##  **Contacts**
 
  - GitHub Repository : https://github.com/Pasha0923/toxic-comments-classification
  - email : pavelsai2309@gmail.com
