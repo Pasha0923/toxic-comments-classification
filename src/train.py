@@ -1,5 +1,6 @@
 import json
 import torch
+import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from transformers import (BertTokenizer,BertForSequenceClassification,get_linear_schedule_with_warmup)
@@ -9,6 +10,7 @@ from src.dataset import ToxicDataset
 from src.preprocessing import preprocess_dataframe
 from src.evaluation import evaluate
 from src.focalloss import FocalLoss
+from iterstrat.ml_stratifiers import (MultilabelStratifiedShuffleSplit)
 from configuration.config import *
 
 # ===================================
@@ -25,21 +27,42 @@ df = pd.read_csv("data/train.csv")
 
 df = preprocess_dataframe(df)
 
-df = df.sample(20000,random_state=42)
+df = df.sample(1000,random_state=42)
 
 X = df["comment_text"]
 y = df[LABEL_COLUMNS].values
 
+# compute class weights for Focal Loss
+
+label_counts = (df[LABEL_COLUMNS].sum().values)
+
+total = len(df)
+
+alpha = ((total-label_counts)/(label_counts+1e-6))
+
+alpha = np.clip(alpha,1,20)
+
+alpha = torch.tensor(alpha,dtype=torch.float).to(device)
+
+print("Alpha weights:",alpha)
+
 # ===================================
-# SPLIT
+# MultilabelStratifiedShuffleSplit SPLIT
 # ===================================
 
-X_train, X_valid, y_train, y_valid = train_test_split(
-    X,
-    y,
+splitter=MultilabelStratifiedShuffleSplit(
+    n_splits=1,
     test_size=0.2,
     random_state=RANDOM_STATE
 )
+
+for train_idx,valid_idx in splitter.split(X,y):
+
+    X_train=X.iloc[train_idx]
+    X_valid=X.iloc[valid_idx]
+
+    y_train=y[train_idx]
+    y_valid=y[valid_idx]
 
 # ===================================
 # TOKENIZER
@@ -98,7 +121,7 @@ model.to(device)
 # LOSS
 # ===================================
 
-criterion = FocalLoss(alpha=1,gamma=2)
+criterion=FocalLoss(alpha=alpha,gamma=2)
 
 # ===================================
 # OPTIMIZER
@@ -129,6 +152,8 @@ train_losses = []
 val_losses = []
 val_f1_scores = []
 best_f1 = 0
+best_epoch=0
+best_thresholds=None
 
 # ===================================
 # VALIDATION LOSS
@@ -232,7 +257,7 @@ for epoch in range(EPOCHS):
 
     print(f"Validation Loss: {val_loss:.4f}")
 
-    f1 = evaluate(model,valid_loader,device)
+    f1,thresholds=evaluate(model,valid_loader,device)
     val_f1_scores.append(f1)
 
     print(f"Validation F1: {f1:.4f}")
@@ -240,29 +265,40 @@ for epoch in range(EPOCHS):
     # ====================
     # SAVE MODEL
     # ====================
-
     if f1 > best_f1:
 
-        best_f1 = f1
-        model.save_pretrained("/content/drive/MyDrive/best_model_v3")
-        tokenizer.save_pretrained("/content/drive/MyDrive/best_model_v3")
+        best_f1=f1
+        best_epoch=epoch+1
+        best_thresholds=thresholds
+
+        model.save_pretrained("/content/drive/MyDrive/best_model_v4")
+        tokenizer.save_pretrained("/content/drive/MyDrive/best_model_v4")
         print("✅ Best model saved")
 
 
 # ===================================
 # SAVE HISTORY
 # ===================================
+history={
 
-history = {
+    "train_losses":train_losses,
 
-    "train_losses": train_losses,
-    "val_losses": val_losses,
-    "val_f1": val_f1_scores
+    "val_losses":val_losses,
+
+    "val_f1":val_f1_scores,
+
+    "best_f1":best_f1,
+
+    "best_epoch":best_epoch,
+
+    "thresholds":best_thresholds
 }
 
 with open("history.json","w") as f:
+    json.dump(history,f,indent=4)
 
-    json.dump(history,f)
+print("\n========== Training Finished ==========")
 
-print("\nTraining finished.")
-print(f"Best F1: {best_f1:.4f}")
+print(f"Best Validation F1: {best_f1:.4f}")
+
+print(f"Best Epoch: {best_epoch}")

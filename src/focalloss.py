@@ -9,10 +9,9 @@ class FocalLoss(nn.Module):
     Gives more attention to difficult
     and rare examples during training.
     """
+
     def __init__(self,alpha=1,gamma=2):
-
         super().__init__()
-
         self.alpha = alpha
         self.gamma = gamma
 
@@ -32,10 +31,15 @@ class FocalLoss(nn.Module):
             1 - probs
         )
 
-        focal_loss = (
-            self.alpha
-            * ((1 - pt) ** self.gamma)
-            * bce
-        )
+        focal_weight = ((1-pt)** self.gamma)
+
+        if isinstance(self.alpha,torch.Tensor):
+
+            alpha = self.alpha.unsqueeze(0)
+
+        else:
+            alpha = self.alpha
+
+        focal_loss = (alpha* focal_weight* bce)
 
         return focal_loss.mean()

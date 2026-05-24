@@ -1,6 +1,7 @@
 transformers
 scikit-learn
 pandas
+iterative-stratification
 numpy
 matplotlib
 streamlit
