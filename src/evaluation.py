@@ -183,3 +183,44 @@ classification_report(
     )
 
     return thresholds
+
+
+# ===================================
+# FINAL TEST EVALUATION
+# ===================================
+
+def test_evaluation(model,dataloader,device,threshold):
+
+    y_true, y_probs = collect_predictions(model,dataloader,device)
+
+    y_pred = np.zeros_like(y_probs)
+
+    for i in range(
+        len(LABEL_COLUMNS)):
+
+        y_pred[:,i] = (
+            y_probs[:,i]
+            >
+            threshold[i]
+        ).astype(int)
+
+    print(
+        "\n===== FINAL TEST CLASSIFICATION REPORT =====\n"
+    )
+
+    print(
+        classification_report(
+            y_true,
+            y_pred,
+            target_names=LABEL_COLUMNS,
+            zero_division=0
+        )
+    )
+
+    f1 = f1_score(
+        y_true,
+        y_pred,
+        average="macro"
+    )
+
+    return f1
