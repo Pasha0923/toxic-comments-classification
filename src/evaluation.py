@@ -143,7 +143,7 @@ def evaluate(
 # FINAL REPORT
 # ===================================
 
-def print_report(model,dataloader,device):
+def report(model,dataloader,device):
 
     y_true,y_probs=collect_predictions(model,dataloader,device)
 

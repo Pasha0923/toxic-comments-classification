@@ -28,7 +28,7 @@ df = pd.read_csv("data/train.csv")
 
 df = preprocess_dataframe(df)
 
-df = df.sample(1000,random_state=42)
+df = df.sample(100000,random_state=42)
 
 X = df["comment_text"]
 y = df[LABEL_COLUMNS].values
