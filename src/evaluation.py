@@ -143,26 +143,13 @@ def evaluate(
 # FINAL REPORT
 # ===================================
 
-def print_report(
-    model,
-    dataloader,
-    device
-):
+def print_report(model,dataloader,device):
 
-    y_true,y_probs=collect_predictions(
-        model,
-        dataloader,
-        device
-    )
+    y_true,y_probs=collect_predictions(model,dataloader,device)
 
-    thresholds=find_best_thresholds(
-        y_true,
-        y_probs
-    )
+    thresholds=find_best_thresholds(y_true,y_probs)
 
-    y_pred=np.zeros_like(
-        y_probs
-    )
+    y_pred=np.zeros_like(y_probs)
 
     for i in range(
         len(LABEL_COLUMNS)
@@ -174,26 +161,20 @@ def print_report(
             thresholds[i]
         ).astype(int)
 
-    print(
-        "\n===== BEST THRESHOLDS =====\n"
-    )
+    print("\n===== BEST THRESHOLDS =====\n")
 
     for label,t in zip(
         LABEL_COLUMNS,
         thresholds
     ):
 
-        print(
-            f"{label}: {t:.2f}"
-        )
-
+        print(f"{label}: {t:.2f}")
     print(
         "\n===== CLASSIFICATION REPORT =====\n"
     )
 
     print(
-
-        classification_report(
+classification_report(
             y_true,
             y_pred,
             target_names=LABEL_COLUMNS,

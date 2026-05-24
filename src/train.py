@@ -2,6 +2,7 @@ import json
 import torch
 import numpy as np
 import pandas as pd
+import pickle
 from sklearn.model_selection import train_test_split
 from transformers import (BertTokenizer,BertForSequenceClassification,get_linear_schedule_with_warmup)
 from torch.utils.data import DataLoader
@@ -63,6 +64,10 @@ for train_idx,valid_idx in splitter.split(X,y):
 
     y_train=y[train_idx]
     y_valid=y[valid_idx]
+
+
+with open("outputs/valid_split.pkl", "wb") as f:
+    pickle.dump((X_valid, y_valid), f)
 
 # ===================================
 # TOKENIZER
